@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.test.board.dao.BoardMapper">
+
+	<!-- 게시글 목록 가져오기 -->
+	<select id="getBoardList" parameterType="map" resultType="BoardVO">
+		SELECT * FROM BOARD
+		<if test="searchCondition == 'TITLE'">
+		WHERE TITLE LIKE '%'||#{searchKeyword}||'%'
+		</if>
+		<if test="searchCondition == 'ID'">
+		WHERE ID LIKE '%'||#{searchKeyword}||'%'
+		</if>
+		<if test="searchCondition == 'CONTENT'">
+		WHERE CONTENT LIKE '%'||#{searchKeyword}||'%'
+		</if>
+		ORDER BY BOARDNUM DESC
+	</select>
+	
+	<!-- 게시글 작성 -->
+	<insert id="write" parameterType="BoardVO">
+		INSERT INTO
+			BOARD
+		VALUES
+			(
+			BRD_SEQ.NEXTVAL,
+			#{id},
+			#{title},
+			#{content},
+			SYSDATE,
+			0
+			<if test="originalFileName != null and savedFileName != null">
+			, #{originalFileName}, #{savedFileName}
+			</if>
+			<if test="originalFileName == null and savedFileName == null">
+			, null, null
+			</if>
+			)
+	</insert>
+	
+	<!-- 게시글 읽기 -->
+	<select id="read" parameterType="int" resultType="BoardVO">
+		SELECT * FROM BOARD WHERE BOARDNUM = #{boardNum}
+	</select>
+	
+	<!-- 게시글 조회수 올리기 -->
+	<update id="addHit" parameterType="int">
+		UPDATE BOARD SET HIT = HIT + 1 WHERE BOARDNUM = #{boardNum}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="delete" parameterType="int">
+		DELETE BOARD WHERE BOARDNUM = #{boardNum}
+	</delete>
+	
+	<!-- 게시글 수정 -->
+	<update id="update" parameterType="boardVO">
+		UPDATE BOARD SET TITLE = #{title}, CONTENT = #{content}
+		<if test="savedFileName != null and originalFileName != null">
+		, SAVEDFILENAME = #{savedFileName}
+		, ORIGINALFILENAME = #{originalFileName}
+		</if>
+		WHERE BOARDNUM = #{boardNum}
+	</update>
+	
+	<!-- 전체 게시글 수 가져오기 -->
+	<select id="getTotal" parameterType="map" resultType="int">
+		SELECT COUNT(*) FROM BOARD
+		<if test="searchCondition == 'TITLE'">
+		WHERE TITLE LIKE '%'||#{searchKeyword}||'%'
+		</if>
+		<if test="searchCondition == 'ID'">
+		WHERE ID LIKE '%'||#{searchKeyword}||'%'
+		</if>
+		<if test="searchCondition == 'CONTENT'">
+		WHERE CONTENT LIKE '%'||#{searchKeyword}||'%'
+		</if>
+	</select>
+	
+	<!-- 댓글 가져오기 -->
+	<select id = "getReplyList" parameterType="int" resultType="ReplyVO">
+		SELECT * from Reply where boardNum = #{boardNum} order by replynum desc	
+	</select>
+	
+	<insert id="addReply" parameterType="map">
+		INSERT INTO
+			reply
+		VALUES
+			(
+			REV_SEQ.NEXTVAL,
+			#{boardNum},
+			#{id},
+			#{replyText},
+			SYSDATE
+			)
+	</insert>
+	
+	<delete id="deleteReply" parameterType="ReplyVO">
+		DELETE reply WHERE replyNum = #{replyNum}
+	</delete>
+</mapper>
